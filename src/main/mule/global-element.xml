@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:snowflake="http://www.mulesoft.org/schema/mule/snowflake"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/snowflake http://www.mulesoft.org/schema/mule/snowflake/current/mule-snowflake.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="e69e61b2-7de6-4b95-b29f-e6ffd816afb8" file="dev-config.yaml" />
+	<snowflake:snowflake-config name="Snowflake_Config" doc:name="Snowflake Config" doc:id="6f0236ee-bcb9-4fc9-b638-087967e63e35" >
+		<snowflake:snowflake-connection accountName="${sf.accountName}" warehouse="${sf.warehouse}" database="${sf.database}" schema="${sf.schema}" user="${sf.user}" password="${sf.password}" role="${sf.role}" />
+	</snowflake:snowflake-config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0e8e1693-b268-48dd-a074-24e2d79e5b46" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="7c6b9f7e-4c95-46b0-bb86-5221ace28511" >
+		<email:smtp-connection host="${email.host}" port="${email.port}" user="${email.user}" password="${email.password}" >
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+</mule>

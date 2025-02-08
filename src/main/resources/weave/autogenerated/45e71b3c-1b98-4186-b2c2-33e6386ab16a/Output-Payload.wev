@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_45e71b3c_1b98_4186_b2c2_33e6386ab16a_Output_Payload = {| status: Any |}
+

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:snowflake="http://www.mulesoft.org/schema/mule/snowflake"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/snowflake http://www.mulesoft.org/schema/mule/snowflake/current/mule-snowflake.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<flow name="bank-customer-acct-creation-gmail" doc:id="45e71b3c-1b98-4186-b2c2-33e6386ab16a" >
+		<ee:transform doc:name="email body" doc:id="e7fb180e-5170-4bf0-ad3b-25be3f7e89d4">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"Congratulation! your account is created Successfully with Account Number " ++ vars.inputPayload.accountNum as String ++ " with bank " ++ vars.bank
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<email:send doc:name="Send Account Created Mail" doc:id="dac1686e-a916-430e-9301-4e12cf35809f" config-ref="Email_SMTP" subject="Congratulations! Account Created" fromAddress="${email.user}">
+			<email:to-addresses >
+				<email:to-address value="#[vars.inputPayload.mailId]" />
+			</email:to-addresses>
+			<email:body contentType="text/plain" encoding="UTF-8" >
+			</email:body>
+		</email:send>
+	</flow>
+	<flow name="bank-customer-acct-creation-apiFlow" doc:id="daf1adfa-0d40-47cc-a59e-320792226e8c" >
+		<logger level="INFO" doc:name="Start log" doc:id="87dbc33f-9281-4b23-bbb1-8bf84c0f9808" message="Start account creation flow"/>
+		<ee:transform doc:name="Create Variable for input payload" doc:id="27c3864b-d633-411a-b320-06331dbd6e65" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="customerName" ><![CDATA[attributes.queryParams."customerName"]]></ee:set-variable>
+				<ee:set-variable variableName="bank" ><![CDATA[attributes.queryParams.'bank']]></ee:set-variable>
+				<ee:set-variable variableName="branchName" ><![CDATA[attributes.queryParams.'branchName']]></ee:set-variable>
+				<ee:set-variable variableName="inputPayload" ><![CDATA[payload]]></ee:set-variable>
+				<ee:set-variable variableName="accountType" ><![CDATA[attributes.queryParams."type"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<snowflake:select doc:name="Select" doc:id="99abc66c-e994-483f-853c-766f30adacfe" config-ref="Snowflake_Config">
+			<snowflake:sql ><![CDATA[select custAccNum,bankName from Bank_Transactions where custAccNum =:accountNum and bankName=:bankName]]></snowflake:sql>
+			<snowflake:input-parameters ><![CDATA[#[{
+	
+	"accountNum": vars.inputPayload.accountNum,
+	"bankName": vars.bank
+}]]]></snowflake:input-parameters>
+		</snowflake:select>
+		<choice doc:name="Choice" doc:id="2992fd85-5000-4e86-900d-814217470e04" >
+			<when expression="#[sizeOf(payload)&gt;0]">
+				<ee:transform doc:name="Account Exists Response" doc:id="10e6022a-1fb6-4f2d-a31e-af9e2c771d5b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+"status": "Account " ++ vars.inputPayload.accountNum ++ " already exists"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<logger level="INFO" doc:name="Account Already Exists" doc:id="9aef6a5b-83a4-4b47-9c8a-7ecf908e29df" message="Account already exists"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Create Account Creation Payload" doc:id="6201ab94-7930-422b-b1eb-372babe4b43d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"custName": vars.customerName,
+	"custAccNum": vars.inputPayload.accountNum,
+	"atmPin": vars.inputPayload.atmPin,
+	"bankName": vars.bank,
+	"accountType": vars.accountType,
+	"ifscCode": vars.inputPayload.ifscCode,
+	"BranchName": vars.branchName,
+	"transactionTimeStamp": now(),
+	"mailId": vars.inputPayload.mailId,
+	"phoneNumber": vars.inputPayload.contact 
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<snowflake:insert doc:name="Insert" doc:id="c7047da9-5d8c-47a5-ba48-5c816187ee67" config-ref="Snowflake_Config">
+					<snowflake:sql ><![CDATA[insert into Bank_Transactions(custName,custAccNum,atmPin,bankName,accountType,ifscCode,BranchName,transactionTimeStamp,mailId,phoneNumber) values(:custName,:custAccNum,:atmPin,:bankName,:accountType,:ifscCode,:BranchName,:transactionTimeStamp,:mailId,:phoneNumber)]]></snowflake:sql>
+					<snowflake:input-parameters ><![CDATA[#[payload]]]></snowflake:input-parameters>
+				</snowflake:insert>
+				<flow-ref doc:name="Flow Reference" doc:id="ad34e628-d0fb-45c7-b93b-b971c1221f16" name="bank-customer-acct-creation-gmail" />
+				<logger level="INFO" doc:name="Account Created" doc:id="3335a2f8-ad39-4d80-ae10-e4d15e6409d5" message="Account created Succesfully, payload: #[payload]"/>
+				<ee:transform doc:name="Account created response" doc:id="034621e8-0be9-4930-82ce-067ea2465f3a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": "Account Created Successfully  with Account Number " ++ vars.inputPayload.accountNum
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
