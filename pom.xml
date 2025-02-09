@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>f5f1c8c7-0b6c-4f81-aa83-08318b9d7c47</groupId>
 	<artifactId>bank-customer-acct-creation-api</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>mule-application</packaging>
 
 	<name>bank-customer-acct-creation-api</name>
@@ -36,7 +34,7 @@
 						<uri>https://anypoint.mulesoft.com</uri>
 						<provider>MC</provider>
 						<environment>dev</environment>
-						<target>Cloudhub-US-East-2</target>
+						<target>${cloud}</target>
 						<muleVersion>4.9.0</muleVersion>
 						<username>${user}</username>
 						<password>${pass}</password>
@@ -63,6 +61,7 @@
 							<artifactId>bcpkix-jdk18on</artifactId>
 						</sharedLibrary>
 					</sharedLibraries>
+					<classifier>---- select project type ----</classifier>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -138,7 +137,7 @@
 		</pluginRepository>
 	</pluginRepositories>
 	<distributionManagement>
-	<repository>
+		<repository>
 			<id>anypoint-exchange-v3</id>
 			<name>Corporate Repository</name>
 			<url>https://maven.anypoint.mulesoft.com/api/v3/${project.groupId}/maven</url>
