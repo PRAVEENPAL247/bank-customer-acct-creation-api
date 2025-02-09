@@ -34,7 +34,7 @@
 						<uri>https://anypoint.mulesoft.com</uri>
 						<provider>MC</provider>
 						<environment>dev</environment>
-						<target>${cloud}</target>
+						<target>cloudhub-us-east-2</target>
 						<muleVersion>4.9.0</muleVersion>
 						<username>${user}</username>
 						<password>${pass}</password>
